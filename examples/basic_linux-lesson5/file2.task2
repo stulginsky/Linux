@@ -1,0 +1,1 @@
+for i in {1..7}; do echo -e "## Lesson 5\n\n### Задание $i. \n\n\`\`\`bash\n\`\`\`" > "task$i.md"; done

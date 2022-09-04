@@ -1,0 +1,288 @@
+# Урок 6. Введение в скрипты bash.
+# Планировщик задач crontab & at
+
+
+# Разбор ДЗ
+
+# 1. Создать файл file1 и наполнить его произвольным содержимым. Скопировать его в file2. Создать символическую ссылку file3 на file1. Создать жёсткую ссылку file4 на file1. Посмотреть, какие inode у файлов. Удалить file1. Что стало с остальными созданными файлами? Попробовать вывести их на экран.
+
+# Создаём файл
+echo 'First file' > file1
+
+# Копируем в file2
+cp file1 file2 
+
+# Создаём символическую ссылку
+ln -s file1 file3
+
+# Создаём жёсткую ссылку
+ln file1 file4
+
+# Посмотрим список файлов с айнодами
+ls -li
+
+# Удалим исходный файл
+rm file1
+
+# Проверим снова
+ls -li
+
+# Проверим содержимое всех файлов
+cat file*
+
+# 2. Дать созданным файлам другие, произвольные имена. Создать новую символическую ссылку. Переместить ссылки в другую директорию.
+
+# Переименовываем файлы
+mv file2 file2_new
+mv file3 file3_new
+mv file4 file4_new
+
+# Создаём ещё одну символическую ссылку
+ln -s file2_new file2_new.link
+
+# СОздадим новую директорию
+mkdir task2
+ls -l
+
+# Переместим файлы в новую директорию
+mv file2_new.link task2
+mv file4_new task2
+
+# Проверим что получилось
+ls -l ./task2/
+
+# 3. Создать два произвольных файла. Первому присвоить права на чтение и запись для владельца и группы, только на чтение — для всех. Второму присвоить права на чтение и запись только для владельца. Сделать это в численном и символьном виде.
+
+# Создадим два файла
+touch doc1.txt
+touch doc2.txt
+ls -l | grep doc
+
+# Зададим права в символьном виде
+chmod ug=rw,o=r doc1.txt
+chmod u=rw,go= doc2.txt
+ls -l | grep doc
+
+# Зададим права в числовом виде
+chmod 0 doc*
+chmod 664 doc1.txt
+chmod 600 doc2.txt
+ls -l | grep doc
+
+# 4. Создать пользователя, обладающего возможностью выполнять действия от имени суперпользователя.
+# Это задание мы рассматривали на одном из предыдущих уроков
+
+# 5. * Создать группу developer и нескольких пользователей, входящих в неё. Создать директорию для совместной работы. Сделать так, чтобы созданные одними пользователями файлы могли изменять другие пользователи этой группы.
+
+# Создадим группу
+sudo groupadd developer
+
+# Создадим двух пользователей
+sudo useradd -m -s /bin/bash dev1
+sudo useradd -m -s /bin/bash dev2
+sudo passwd dev1
+sudo passwd dev2
+
+# Добавим пользователей в группу developer
+sudo usermod -aG developer dev1
+sudo usermod -aG developer dev2
+
+# Создадим папку проекта
+mkdir project
+
+# Изменим группу для проекта
+chgrp developer project
+
+# выставим SGID
+sudo chmod g+s project
+
+# 6. * Создать в директории для совместной работы поддиректорию для обмена файлами, но чтобы удалять файлы могли только их создатели.
+
+# Создаём в project общую папку
+cd project
+mkdir shared
+
+# Зададим для неё stiky bit
+chmod +t shared
+ls -l
+
+# 7. * Создать директорию, в которой есть несколько файлов. Сделать так, чтобы открыть файлы можно было, только зная имя файла, а через ls список файлов посмотреть было нельзя.
+
+# Создадим новую папку
+mkdir noread
+ls -l
+
+# Создадим в этой папке текстовой файл
+echo 'I can read the file' > noread/document.txt
+
+# Заберём у папки право на чтение
+chmod -r noread
+
+# Проверим что получилось
+ls -l noread
+cat noread/document.txt
+
+
+# Вопросы по предыдущим урокам
+# Примеры команд ACL
+getfacl --help
+getfacl -a .
+setfacl --help
+setfacl -m g:team1:rw full.log 
+getfacl -a full.log 
+ls -l | grep full
+setfacl -x g:team1 full.log 
+ls -l | grep full
+getfacl -a full.log 
+
+
+
+
+# Правила написания скриптов
+
+# Создадим папку урока
+mkdir lesson6
+cd lesson6
+
+# Создадим наш первый скрипт
+cat > hello.sh
+# Our first script
+echo 'Hello team!'
+
+# Запуск скрипта явным вызовом bash
+bash hello.sh
+
+# Делаем скрипт исполняемым
+chmod +x hello.sh
+
+# Запускаем с указанием относительного или абсолютного пути
+./script1.sh
+
+# Добавим первую строку
+#!/bin/bash
+
+# Переменные
+# установить значение переменной
+a=123
+
+# прочитать значение переменной
+echo $a
+
+# Некоторые переменные окружения
+echo $PATH
+echo $PWD
+echo $?
+
+# арифметические операции с переменными
+a=$((3+25))
+echo $a
+
+# Условный оператор if
+nano use_if.sh
+
+#!/bin/bash
+a=$1
+b=$2
+if [ -z $a ] || [ -z $b ]
+  then
+    echo "Please use parameters"
+    exit 1
+  else
+    if [ $a -eq $b ]
+      then
+        echo "true"
+      else
+        echo "false"
+    fi
+fi
+
+# Цикл for-in
+nano use_for_in.sh
+
+#!/bin/bash
+for i in {1..5}
+  do 
+    echo $i
+done
+
+# Цикл while
+nano use_while.sh
+
+#!/bin/bash
+i=1
+while [ $i -lt 10 ]
+  do 
+    echo $i
+    ((i+=1))
+done
+
+
+
+# Использование grep
+
+# Найдём файлы, имена которых включают sh
+ls -l | grep sh
+
+# Создадим ещё один файл для тестирования
+touch shell.txt
+
+# Проверим
+ls -l | grep sh
+
+# Создадим шаблон на регулярных выражениях для более точного поиска
+ls -l | grep -P '.*(for|if).*\.sh$'
+
+# Потоковый текстовый редактор sed
+
+# Изменим в скрипте hello.sh слово Hello на Bye
+cat hello.sh
+sed 's/Hello/Bye/g' hello.sh
+
+# Или меняем сразу в файле
+sed -i 's/Hello/Bye/g' hello.sh
+
+# Использование awk
+# Из общего вывода получим только столбцы айнодов и имён файлов
+ls -li
+ls -li | awk '{ print $1, $10 }'
+
+# Планировщик at
+
+# Установим at
+sudo apt install at
+
+# Проверим его статус
+sudo systemctl status atd
+
+# Создадим задание
+at -f /home/ubuntu/lesson6/hello.sh 12:00am 10/24/2020
+
+# Просмотреть очередь заданий
+atq
+
+# Удалить первое задание
+atrm 1
+
+# Планировщик Crontab
+
+# Просмотрим системный crontab
+cat /etc/crontab 
+
+# Просмотрим пользовательский crontab
+crontab -l
+
+# редактируем пользовательский crontab
+crontab -e
+
+# Добавим новое задание
+0 23 * * 6 /home/ubuntu/lesson6/hello.sh
+
+# Проверка выполнения задания по записям в системном логе
+sudo cat /var/log/syslog | grep -i cron
+
+
+
+
+
+
+

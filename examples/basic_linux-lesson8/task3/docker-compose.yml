@@ -1,0 +1,20 @@
+version: '3'
+services:
+  nginx:
+    build: ./nginx
+    command: /opt/run_nginx.sh
+    container_name: nginx
+    domainname: ${DOMAIN}
+    hostname: nginx
+    networks:
+    - vas
+    ports:
+    - ${HTTPPORT}:80
+    - ${HTTPSPORT}:443
+    restart: always
+    tty: true
+    volumes:
+    - ../static:/var/www/static:ro
+networks:
+  vas:
+    driver: bridge
